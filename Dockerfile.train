@@ -1,0 +1,14 @@
+FROM pytorch/pytorch:2.5.1-cuda12.4-cudnn9-devel
+
+ENV PYTHONUNBUFFERED=1 \
+    PYTHONDONTWRITEBYTECODE=1 \
+    ASSEMBLY_DISABLE_FLASH_ATTN=1 \
+    PYTORCH_CUDA_ALLOC_CONF=max_split_size_mb:64 \
+    MPLCONFIGDIR=/tmp/matplotlib
+
+WORKDIR /workspace
+COPY requirements.txt /workspace/requirements.txt
+RUN python -m pip install --no-cache-dir -r requirements.txt
+COPY callbacks configs datasets models tools train.py gc_algorithm.py evaluate.py inference.py /workspace/
+
+CMD ["python", "train.py", "--config-name", "train_fixedparser_sim294_clinical150_select20hard10_n1800_equaleven_rotgeom_w01_frome19_lr5e6"]

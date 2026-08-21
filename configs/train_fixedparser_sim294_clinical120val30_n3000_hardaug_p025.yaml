@@ -1,0 +1,13 @@
+# @package _global_
+# Same as hardaug, but reduce hard-pose probability from 0.35 to 0.25
+# to keep the hard-case gains while reducing PA drops on easier cases.
+
+defaults:
+  - train_fixedparser_sim294_clinical120val30_n3000_hardaug
+  - _self_
+
+project_name: fixedparser_sim294_clinical120val30_n3000_hardaug_p025
+experiment_name: fixedparser_sim294_clinical120val30_n3000_hardaug_p025
+
+data:
+  hard_pose_aug_prob: 0.25

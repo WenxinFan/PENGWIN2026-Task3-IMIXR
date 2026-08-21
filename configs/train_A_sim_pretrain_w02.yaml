@@ -1,0 +1,56 @@
+# @package _global_
+# Track A, stage 1: simulation pretraining with the current w=0.2 loss.
+#
+# This is the clean baseline for testing whether simulation coverage improves
+# final-style generalisation.  It intentionally keeps the loss family unchanged:
+# fragment-balanced coordinate loss + weak pose consistency.
+
+defaults:
+  - model: AssemblyTransformer_coords
+  - trainer: default
+  - hydra: default
+  - callbacks: default
+  - data: multibone_fragments
+  - _self_
+
+project_name: assemble_coord_A_sim_pretrain_w02
+experiment_name: assemble_coord_A_sim_pretrain_w02
+seed: 42
+
+model:
+  training_mode: full
+  checkpoint: null
+  fragment_balanced_loss: true
+  pose_loss_weight: 0.2
+  trans_loss_weight: 1.0
+  rot_loss_weight: 1.0
+  pose_loss_max_points_per_part: 256
+  optimizer:
+    lr: 1e-4
+    weight_decay: 0.01
+
+data:
+  data_type: simu
+  random_anchor: true
+  merge_prob: 0.15
+  frac_prob: 0.70
+  drop_prob: 0.10
+  region_dropout_prob: 0.05
+  point_jitter_std: 0.001
+  batch_size: 4
+  num_workers: 8
+  npoints_per_bone: 3000
+  sim_combos_per_case: 100
+
+trainer:
+  precision: bf16-mixed
+  max_epochs: 300
+  check_val_every_n_epoch: 5
+  accumulate_grad_batches: 1
+
+callbacks:
+  early_stopping:
+    patience: 50
+  model_checkpoint:
+    save_top_k: 3
+    save_last: true

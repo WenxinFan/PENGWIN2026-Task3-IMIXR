@@ -1,0 +1,41 @@
+# @package _global_
+# Short rotation-geometry continuation from the best T4 checkpoint.
+# Training remains 1800/equal/even; automatic official validation uses the
+# selected deployment protocol 3000/volume/random with rot_alpha=0.975.
+
+defaults:
+  - train_fixedparser_sim294_clinical120val30_n1800_equaleven_hardaug_p025_rotstrat_403030_fromsim294
+  - _self_
+
+project_name: fixedparser_sim294_clinical120val30_n1800_equaleven_hardaug_p025_rotstrat_rotgeom_w01_frome169
+experiment_name: fixedparser_sim294_clinical120val30_n1800_equaleven_hardaug_p025_rotstrat_rotgeom_w01_frome169
+
+model:
+  checkpoint: ./weights/train120_rotstrat_e169.ckpt
+  rot_geom_loss_weight: 0.1
+  relative_rot_loss_weight: 0.0
+  optimizer:
+    lr: 1e-5
+    weight_decay: 0.01
+
+trainer:
+  max_epochs: 40
+  check_val_every_n_epoch: 5
+
+callbacks:
+  reproduction_guard:
+    expected_total_steps: 80
+  official_eval:
+    every_n_epochs: 10
+    npoints: 3000
+    allocation: volume
+    surface_sample: random
+    alpha: 1.0
+    rot_alpha: 0.975
+    tta: 1
+    max_iters: 1
+  early_stopping:
+    patience: 12
+  model_checkpoint:
+    save_top_k: -1
+    save_last: true

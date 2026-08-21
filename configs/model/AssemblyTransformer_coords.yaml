@@ -1,0 +1,82 @@
+# ==============================================================================
+# Global Lightning Module Configuration
+# ==============================================================================
+_target_: models.AssemblyNet.lightning_module.AssemblyLightningModule
+output_type: "coords"  # Mode switch: "coords" or "pose"
+save_vis_path: ./output/${experiment_name}
+
+# Training mode: "full", "lora", or "head_only". Head-only freezes the point
+# encoder and all transformer layers, updating only transformer_model.head.
+training_mode: "full"
+
+# Path to pretrained checkpoints for LoRA fine-tuning (null = train from scratch)
+checkpoint: null
+lora_rank: 16
+lora_alpha: 32.0
+
+# ------------------------------------------------------------------------------
+# Loss Configuration
+# ------------------------------------------------------------------------------
+# Equalise fragments before averaging the coordinate loss. This keeps large
+# fragments from dominating small but PA-critical fragments.
+fragment_balanced_loss: true
+
+# Additional rigid-pose supervision extracted from coords via differentiable SVD.
+# Total coords-mode loss:
+#   loss = balanced_coord_loss + pose_loss_weight * (
+#       trans_loss_weight * SmoothL1(trans_pred, trans_gt)
+#     + rot_loss_weight   * (1 - abs(dot(quat_pred, quat_gt)))
+#   )
+pose_loss_weight: 1.0
+trans_loss_weight: 1.0
+rot_loss_weight: 1.0
+pose_loss_max_points_per_part: 256
+
+# Optional rotation-specific objectives. Zero preserves all existing recipes.
+rot_geom_loss_weight: 0.0
+so3_geodesic_loss_weight: 0.0
+relative_rot_loss_weight: 0.0
+
+# Metric-aligned supervision on the rigid coordinates reconstructed from the
+# differentiable Kabsch pose. Optional tail weighting applies only to this loss.
+rigid_point_loss_weight: 0.0
+rigid_hard_fragment_weight_gamma: 0.0
+rigid_hard_fragment_weight_min: 0.75
+rigid_hard_fragment_weight_max: 1.5
+
+# Optional reweighting of per-fragment coordinate losses. Defaults reproduce the
+# plain fragment-balanced loss exactly.
+fragment_size_weight_gamma: 0.0
+fragment_size_weight_min: 0.5
+fragment_size_weight_max: 2.0
+hard_fragment_weight_gamma: 0.0
+hard_fragment_weight_min: 0.5
+hard_fragment_weight_max: 2.0
+
+# ------------------------------------------------------------------------------
+# Core Transformer Architecture Configuration
+# (Corresponds to the 'transformer_model' parameter in __init__)
+# ------------------------------------------------------------------------------
+transformer_model:
+  _target_: models.AssemblyNet.transformer.AssemblyTransformer
+  max_parts: 50
+  embed_dim: 384
+  num_layers: 12
+  num_heads: 8
+  dropout_rate: 0.0
+  output_type: ${..output_type}
+
+# ------------------------------------------------------------------------------
+# Optimizer Configuration
+# (_partial_: True defers instantiation until network parameters are ready)
+# ------------------------------------------------------------------------------
+optimizer:
+  _target_: torch.optim.AdamW
+  _partial_: True
+  lr: 1e-4
+  weight_decay: 0.01
+  betas: [0.9, 0.999]
+
+# `onecycle` is the historical default.  A short continuation loaded from a
+# finished OneCycle checkpoint can explicitly use `constant` instead.
+lr_scheduler: onecycle

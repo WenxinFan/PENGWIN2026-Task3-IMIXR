@@ -1,0 +1,47 @@
+# @package _global_
+# Low-LR short continuation from T4 rotgeom e19 after adding val20+hard10.
+# The fixed selection set is val10+hard10; training remains 1800/equal/even,
+# while official selection evaluation uses the deployment protocol.
+
+defaults:
+  - train_fixedparser_sim294_clinical120val30_n1800_equaleven_hardaug_p025_rotstrat_rotgeom_w01_frome169
+  - _self_
+
+project_name: fixedparser_sim294_clinical150_select20hard10_n1800_equaleven_rotgeom_w01_frome19_lr5e6
+experiment_name: fixedparser_sim_clinical150_select20hard10_n1800_equaleven_rotgeom_w01_frome19_lr5e6
+
+model:
+  checkpoint: ./weights/train120_rotgeom_e19.ckpt
+  optimizer:
+    lr: 5e-6
+    weight_decay: 0.01
+
+data:
+  split_json: configs/splits/clinical_train150_select20hard10_seed42.json
+  split_fold: train150_select20hard10_seed42
+
+trainer:
+  max_epochs: 15
+  check_val_every_n_epoch: 5
+
+callbacks:
+  reproduction_guard:
+    expected_train_samples: 150
+    expected_val_samples: 20
+    expected_total_steps: 45
+  official_eval:
+    split_root: clinical_valtest_split/mesh_select_val10_hard10_seed42
+    output_dir: ./output/${experiment_name}/official_select_val10_hard10
+    every_n_epochs: 5
+    npoints: 3000
+    allocation: volume
+    surface_sample: random
+    alpha: 1.0
+    rot_alpha: 0.975
+    tta: 1
+    max_iters: 1
+  early_stopping:
+    patience: 10
+  model_checkpoint:
+    save_top_k: -1
+    save_last: true

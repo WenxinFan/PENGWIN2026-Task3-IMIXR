@@ -1,0 +1,26 @@
+# @package _global_
+# T4 in the controlled point-pattern ablation.
+# Relative to the 3000/equal/even rotstrat baseline, only the point count is
+# changed.  Split, initialization, augmentation, losses, optimizer, sampler,
+# allocation/surface pattern, and training horizon stay fixed.
+
+defaults:
+  - train_fixedparser_sim294_clinical120val30_n3000_hardaug_p025_rotstrat_403030_fromsim294
+  - _self_
+
+project_name: fixedparser_sim294_clinical120val30_n1800_equaleven_hardaug_p025_rotstrat_403030_fromsim294
+experiment_name: fixedparser_sim294_clinical120val30_n1800_equaleven_hardaug_p025_rotstrat_403030_fromsim294
+
+data:
+  npoints_per_bone: 1800
+  mesh_allocation: equal
+  surface_sample: even
+
+callbacks:
+  clinical_parser_guard:
+    expected_npoints_per_bone: 1800
+  official_eval:
+    npoints: 1800
+    allocation: equal
+    surface_sample: even
+

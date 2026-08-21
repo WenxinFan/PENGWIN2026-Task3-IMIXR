@@ -1,0 +1,43 @@
+# @package _global_
+# Controlled clinical rerun from fixed simulation e294.  This matches p0.25
+# exactly except for train120-only GT-relative rotation stratified sampling.
+
+defaults:
+  - train_fixedparser_sim294_clinical120val30_n3000_hardaug_p025
+  - _self_
+
+project_name: fixedparser_sim294_clinical120val30_n3000_hardaug_p025_rotstrat_403030_fromsim294
+experiment_name: fixedparser_sim294_clinical120val30_n3000_hardaug_p025_rotstrat_403030_fromsim294
+
+model:
+  output_type: coords
+  checkpoint: ./weights/sim_pretrain_e294.ckpt
+  pose_loss_weight: 0.2
+  trans_loss_weight: 1.0
+  rot_loss_weight: 1.0
+  rot_geom_loss_weight: 0.0
+  relative_rot_loss_weight: 0.0
+  optimizer:
+    lr: 5e-5
+    weight_decay: 0.01
+
+data:
+  rotation_stratified_sampling: true
+  rotation_strata_quantiles: [0.5, 0.8]
+  rotation_strata_target_probs: [0.4, 0.3, 0.3]
+  rotation_sampling_seed: 42
+
+trainer:
+  max_epochs: 200
+  check_val_every_n_epoch: 5
+
+callbacks:
+  reproduction_guard:
+    expected_total_steps: 400
+  official_eval:
+    every_n_epochs: 10
+    alpha: 1.0
+    tta: 1
+    max_iters: 1
+  early_stopping:
+    patience: 50

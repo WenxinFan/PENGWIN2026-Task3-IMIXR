@@ -1,0 +1,96 @@
+# @package _global_
+# Fixed-parser sim294 -> clinical finetuning with hard-pose and small-fragment
+# data augmentation. Evaluation stays 3000/equal/even/alpha1/tta1.
+
+defaults:
+  - model: AssemblyTransformer_coords
+  - trainer: default
+  - hydra: default
+  - callbacks: default
+  - data: multibone_fragments
+  - _self_
+
+project_name: fixedparser_sim294_clinical120val30_n3000_hardaug
+experiment_name: fixedparser_sim294_clinical120val30_n3000_hardaug
+seed: 42
+
+model:
+  training_mode: full
+  checkpoint: ./weights/sim_pretrain_e294.ckpt
+  fragment_balanced_loss: true
+  pose_loss_weight: 0.2
+  trans_loss_weight: 1.0
+  rot_loss_weight: 1.0
+  pose_loss_max_points_per_part: 256
+  optimizer:
+    lr: 5e-5
+    weight_decay: 0.01
+
+data:
+  data_type: real
+  use_all_train: false
+  split_json: configs/splits/clinical_val30_hard20_seed42.json
+  split_fold: val30_hard20_seed42
+  random_anchor: false
+  merge_prob: 0.0
+  frac_prob: 0.0
+  drop_prob: 0.15
+  region_dropout_prob: 0.1
+  point_jitter_std: 0.002
+  npoints_per_bone: 3000
+  mesh_allocation: equal
+  surface_sample: even
+  small_fragment_boost_factor: 1.8
+  small_fragment_area_percentile: 35.0
+  hard_pose_aug_prob: 0.35
+  hard_pose_aug_max_angle_deg: 35.0
+  hard_pose_aug_max_translation_mm: 30.0
+  hard_pose_aug_bones: [LI, RI]
+  hard_pose_aug_preserve_anchor: true
+  use_real_poses: true
+  real_pose_ratio: 0.3
+  batch_size: 2
+  num_workers: 4
+
+trainer:
+  devices: [0, 1]
+  strategy: ddp
+  precision: 16-mixed
+  max_epochs: 200
+  check_val_every_n_epoch: 5
+  accumulate_grad_batches: 16
+
+callbacks:
+  clinical_parser_guard:
+    _target_: callbacks.clinical_parser_guard.ClinicalParserGuard
+    case_id: "191"
+    expected_fragment_ids: ["1", "2", "101", "102", "103", "104", "201", "202"]
+    expected_npoints_per_bone: 3000
+  reproduction_guard:
+    _target_: callbacks.reproduction_guard.ReproductionGuard
+    expected_world_size: 2
+    expected_train_samples: 120
+    expected_val_samples: 30
+    expected_total_steps: 400
+    require_flash_disabled: true
+    expected_trimesh_version: 4.12.2
+  official_eval:
+    _target_: callbacks.official_eval.OfficialEvalCallback
+    split_root: clinical_valtest_split/mesh_val_select
+    output_dir: ./output/${experiment_name}/official_val
+    every_n_epochs: 10
+    max_cases: 0
+    npoints: 3000
+    allocation: equal
+    surface_sample: even
+    alpha: 1.0
+    tta: 1
+    max_iters: 1
+    seed: 42
+    cuda_visible_devices: "0"
+    async_eval: true
+  early_stopping:
+    patience: 50
+  model_checkpoint:
+    save_top_k: 5
+    save_last: true

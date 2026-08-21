@@ -1,0 +1,8 @@
+.git
+data
+output
+clinical_valtest_split
+weights/*.ckpt
+__pycache__
+*.pyc
+*.tar.gz

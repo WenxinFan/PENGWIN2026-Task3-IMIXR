@@ -1,0 +1,20 @@
+Package: train150 e4 SA75/LI75/RI50 clean rebuild v2.1.0
+Candidate: original train150 e4 weights, rotgeom w0.1, 3000/volume/random inference with bone-specific fragment floors
+Training checkpoint: output/fixedparser_sim_clinical150_select20hard10_n1800_equaleven_rotgeom_w01_frome19_lr5e6/epoch-epoch=4.ckpt
+Inference checkpoint: model/model_state_dict.pt
+Inference defaults: npoints=3000 per bone, allocation=volume, surface_sample=random, min_points_per_fragment=SA75/LI75/RI50
+Post-processing defaults: alpha=1.0, rot_alpha=0.975, max_iters=1, tta=1, seed=42
+Output: /output/reduction-poses-matrices.json
+Build: flattened dependency-only runtime; inherited model/code removed before release
+Runtime application: /opt/app/pengwin_task3 with one inference checkpoint
+Device guard: unsupported CUDA architectures use real CPU inference
+Algorithm description: ALGORITHM.md
+Reproducibility record: REPRODUCIBILITY.md
+Release verification: case 001, native versus offline Docker, 3 fragments, max absolute matrix difference 3.95774841309e-05
+Validation evidence:
+- val10+hard10 selection with SA75/LI75/RI50: Trans 4.154 mm, Rot 7.82 deg, TRE 3.274 mm, CD 3.8703 mm, PA 82.7%
+- matched all-bone floor75: Trans 4.155 mm, Rot 7.79 deg, TRE 3.266 mm, CD 3.8664 mm, PA 81.6%
+- original floor20 reference: Trans 4.281 mm, Rot 8.02 deg, TRE 3.304 mm, CD 3.8856 mm, PA 82.3%
+- full hard20 diagnostic: Trans 5.511 mm, Rot 13.57 deg, TRE 3.613 mm, CD 4.1241 mm, PA 73.8%
+OBJ mapping: corrected original o/g fragment ID mapping from the current clinical loader
+Selection note: val10+hard10 is the shared independent selection split; full hard20 contains 10 training cases and is diagnostic only.
