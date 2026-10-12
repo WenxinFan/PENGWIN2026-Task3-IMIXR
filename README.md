@@ -1,4 +1,4 @@
-# PENGWIN 2026 Task 3: train150-e4 + SA75/LI75/RI50
+# PENGWIN 2026 Task 3
 
 This repository is the complete research-code release for the submitted
 PENGWIN 2026 Task 3 reduction model. It contains the training pipeline,
